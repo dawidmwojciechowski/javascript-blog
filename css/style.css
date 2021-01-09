@@ -111,4 +111,22 @@ body {
 p {
   text-align: justify;
 }
+
+/* Responsiv w<618px h<315px */
+@media (max-width: 768px) {
+  .wrapper {
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-direction: column;
+        flex-direction: column;
+    margin: 20px;
+  }
+  aside, section {
+    margin: 10px;
+  }
+  .logo {
+    font-size: 44px;
+    font-weight: bold;
+  }
+}
 /*# sourceMappingURL=style.css.map */
