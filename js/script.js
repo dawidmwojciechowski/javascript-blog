@@ -1,4 +1,12 @@
-'use strict'
+'use strict';
+
+const templates = {
+  articleLink: Handlebars.compile(document.querySelector('#template-article-link').innerHTML),
+  tagLink: Handlebars.compile(document.querySelector('#template-tag-link').innerHTML),
+  authorLink: Handlebars.compile(document.querySelector('#template-author-link').innerHTML),
+  tagCloudLink: Handlebars.compile(document.querySelector('#template-tag-cloud-link').innerHTML),
+  authorListLink: Handlebars.compile(document.querySelector('#template-authors-list').innerHTML)
+};
 
 const optArticleSelector = '.post',
   optTitleSelector = '.post-title',
@@ -14,20 +22,20 @@ const titleClickHandler = function (event) {
   event.preventDefault();
   const clickedElement = this;
   console.log('Link was clicked!');
-  
+
   /* [DONE] remove class 'active' from all article links  */
   const activeLinks = document.querySelectorAll('.titles a.active');
-  
+
   for (let activeLink of activeLinks) {
     activeLink.classList.remove('active');
   }
-  
+
   /* [DONE] add class 'active' to the clicked link */
   clickedElement.classList.add('active');
-  
+
   /* [DONE] remove class 'active' from all articles */
   const activeArticles = document.querySelectorAll('.posts article.active');
-  
+
   for (let activeArticle of activeArticles) {
     activeArticle.classList.remove('active');
   }
@@ -39,7 +47,7 @@ const titleClickHandler = function (event) {
   console.log(targetArticle);
   /* add class 'active' to the correct article */
   targetArticle.classList.add('active');
-}; 
+};
 
 function generateTitleLinks(customSelector = ''){
   /* [DONE] remove contents of titleList */
@@ -50,14 +58,15 @@ function generateTitleLinks(customSelector = ''){
   console.log(articles);
   let html = '';
   for (let article of articles) {
-  
+
     /* [DONE] get the article id */
     const articleId = article.getAttribute('id');
     /* [DONE] find the title element */ /* [DONE] get the title from the title element */
     const articleTitle = article.querySelector(optTitleSelector).innerHTML;
-  
+
     /* [DONE] create HTML of the link */
-    const linkHTML = '<li><a href="#' + articleId + '"><span>' + articleTitle + '</span></a></li>';
+    const linkHTMLData = {id: articleId, title: articleTitle};
+    const linkHTML = templates.articleLink(linkHTMLData);
     console.log(linkHTML);
     /* [DONE] insert link into titleList */
     html = html + linkHTML;
@@ -66,13 +75,13 @@ function generateTitleLinks(customSelector = ''){
 
   const links = document.querySelectorAll('.titles a');
   console.log(links);
-  
+
   for (let link of links) {
     link.addEventListener('click', titleClickHandler);
   }
 }
 generateTitleLinks();
-  
+
 function calculateTagsParams(tags){
   const params = { min: 999999, max: 0};
   for(let tag in tags){
@@ -103,7 +112,7 @@ function generateTags(){
   /* START LOOP: for every article: */
   for (let article of articles) {
   /* find tags wrapper */
-    const tagsWrapper = article.querySelector(optArticleTagsSelector); 
+    const tagsWrapper = article.querySelector(optArticleTagsSelector);
     /* make html variable with empty string */
     let html = '';
     /* get tags from data-tags attribute */
@@ -114,10 +123,12 @@ function generateTags(){
     /* START LOOP: for each tag */
     for (let tag of articleTagsArray){
     /* generate HTML of the link */
-      const linkHTML = '<li><a href="#tag-' + tag + '">' + tag + '</a></li> ';
-      console.log(linkHTML);
+      //let tagHTML = '<li><a href="#tag-' + tag + '">' + tag + '</a></li> ';
+      const linkHTMLData = {tagId: tag, tagTitle: tag};
+      const tagHTML = templates.tagLink(linkHTMLData);
+      console.log(tagHTML);
       /* add generated code to html variable */
-      html = html + linkHTML;
+      html = html + tagHTML;
       /* [NEW] check if this link is NOT already in allTags */
       if(!allTags[tag]) {
         /* [NEW] add tag to allTags object */
@@ -128,7 +139,7 @@ function generateTags(){
     /* END LOOP: for each tag */
     }
     /* insert HTML of all the links into the tags wrapper */
-    tagsWrapper.innerHTML = html; 
+    tagsWrapper.innerHTML = html;
     /* END LOOP: for every article: */
   }
   /* [NEW] find list of tags in right column */
@@ -136,18 +147,24 @@ function generateTags(){
   /* [NEW] create variable for all links HTML code */
   const tagsParams = calculateTagsParams(allTags);
   console.log('tagsParams:', tagsParams);
-  let allTagsHTML = '';
+  //let allTagsHTML = '';
+  const allTagsData = {tags: []};
   /* [NEW] START LOOP: for each tag in allTags: */
   for (let tag in allTags){
-    /* [NEW] generate code of a link and add it to allTagsHTML */  
-    allTagsHTML +=  '<li class="'+ calculateTagsClass(allTags[tag], tagsParams) + '"> <a href="#tag-' + tag + '"> ' + tag + ' </a></li>';
-
+    /* [NEW] generate code of a link and add it to allTagsHTML */
+    //allTagsHTML +=  '<li class="'+ calculateTagsClass(allTags[tag], tagsParams) + '"> <a href="#tag-' + tag + '"> ' + tag + ' </a></li>';
+    allTagsData.tags.push({
+      tag: tag,
+      count : allTags[tag],
+      className: calculateTagsClass(allTags[tag], tagsParams)
+    });
     /* [NEW] END LOOP: for each tag in allTags: */
   }
   /*[NEW] add from allTagsHTML to tagList */
-  tagList.innerHTML = allTagsHTML;
+  tagList.innerHTML = templates.tagCloudLink(allTagsData);
+  console.log(allTagsData);
 }
-    
+
 generateTags();
 
 function tagClickHandler(event){
@@ -188,9 +205,9 @@ function addClickListenersToTags(){
     linkTags.addEventListener('click',tagClickHandler);
   /* END LOOP: for each link */
   }
-} 
-  
-addClickListenersToTags(); 
+}
+
+addClickListenersToTags();
 
 function generateAuthors(){
   /* [NEW] create a new variable with an empty object */
@@ -206,9 +223,11 @@ function generateAuthors(){
     /* get authors from data-authors attribute */
     const author = article.getAttribute('data-author');
     /* generate html of the link */
-    const linkHTML = '<a href="#author-' + author + '">' + author + '</a>';
+    //const authorHTML = '<a href="#author-' + author + '">' + author + '</a>';
+    const linkHTMLData = {authorId: author, author: author};
+    const authorHTML = templates.authorLink(linkHTMLData);
     /* add generated code to html variable */
-    html = html + linkHTML;
+    html = html + authorHTML;
     /* [NEW] check if this link is NOT already in allAuthors */
     if(!allAuthors[author]){
     /* [NEW] add tag to allTags object */
@@ -228,7 +247,7 @@ function generateAuthors(){
   let allAuthorsHTML = '';
   /* [NEW] START LOOP: for each tag in allTags: */
   for (let author in allAuthors){
-  /* [NEW] generate code of a link and add it to allAuthorsHTML */ 
+  /* [NEW] generate code of a link and add it to allAuthorsHTML */
     allAuthorsHTML += '<li class="'+ calculateTagsClass(allAuthors[author], authorsParams) + '" ><a href="#author-' + author + '">' + author + '(' + allAuthors[author] + ')</a></li>';
   }
   /*[NEW] add from allTagsHTML to tagList */
